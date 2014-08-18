@@ -11,5 +11,7 @@ function My_Item(name, number, unit, price) {
     this.unit = unit;
     this.price = price || 0.00;
     this.total = (this.price) * (this.number) ;
+    this.promotion = false;
+    this.free_number = 0;
 }
 

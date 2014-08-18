@@ -2,76 +2,47 @@
 
 printInventory = function(inputs){
     var allItems = loadAllItems();
-    var arr=[];          //My_Item(name, number, unit, price)
-    var s ;
+    var arr={};
 
     inputs = inputs.sort();                               //对inputs数组排序 找到条形码对应的数量
-    for( var k = 0 ; k < inputs.length ; k = s ){
-        var my_buy_item = new My_Item(null,1,null,null);
-           my_buy_item.name = inputs[k];
-        for(  s = k+1; s < inputs.length ; s++){
-            if( inputs[k] == inputs [s]){
-                my_buy_item.number = my_buy_item.number +1;
-            }
-            else {
-                break;
-            }
-        }
-        arr.push(my_buy_item);             //此时数组里存的是每种商品对应的条形码和数量
+    for( var k = 0 ; k < inputs.length ; k++){
+        var barcode = inputs[k].substring(0,10);
+        var number = parseInt(inputs[k].substring(11)) || 1;
+        var my_buy_item = arr[barcode] || new My_Item(null,0,null,null);
+        my_buy_item.name = barcode;
+        my_buy_item.number += number;
+        arr[barcode] = (my_buy_item);             //此时数组里存的是每种商品对应的条形码和数量
     }
+
+
 
     var arr_free = [];
-    var promotion = loadPromotions()[0];
-    for( var i = 0 ; i < arr.length ; i++){
-        if(arr[i].number > 2){
-            var my_free_item = new My_Item();   //My_free_Item(name, number, unit)
-            for( var j = 0;j < promotion.barcodes.length ; j++){
-                if(arr[i].name == promotion.barcodes[j] ){
-                    my_free_item.name = arr[i].name ;
-                    my_free_item.number = parseInt(arr[i].number/3);
-                    arr_free.push(my_free_item);
-                }
-            }
+    var promotion = loadPromotions()[0].barcodes;
+    for(var ii = 0; ii < promotion.length; ii++) {
+        if(arr[promotion[ii]]) {
+            arr[promotion[ii]].promotion = true;
         }
     }
 
-    for( var i = 0 ;i < arr_free.length ; i++){       //把inputs里free商品的条形码与items对应起来，找到名称单位数量
-        for( var j = 0 ;j < allItems.length ; j++){
-            if(arr_free[i].name == allItems[j].barcode){
-                arr_free[i].name = allItems[j].name;
-                arr_free[i].unit = allItems[j].unit;
-                arr_free[i].price = allItems[j].price;
-                arr_free[i].total = arr_free[i].price * arr_free[i].number ;
-            }
+    for(var item in arr) {
+        if(arr[item].promotion) {
+            arr[item].free_number = parseInt(arr[item].number/3);
+            arr_free.push(arr[item]);
         }
     }
 
-    for( var i = 0;i < arr.length ; i++){              //把inputs的条形码与items对应起来，找到名称单位数量
-        for( var j = 0;j < allItems.length ; j++){
-
-            if(arr[i].name.slice(10,11) == '-'){
-                    arr[i].number = parseInt(arr[i].name.slice(11,12));
-            }
-             if(arr[i].name.slice(0,10) == allItems[j].barcode){
-                arr[i].name = allItems[j].name;
-                arr[i].unit = allItems[j].unit;
-                arr[i].price = allItems[j].price;
-                 break;
-             }
+    for( var i = 0;i < allItems.length ; i++){              //把inputs的条形码与items对应起来，找到名称单位数量
+        if(arr[allItems[i].barcode]) {
+            arr[allItems[i].barcode].name = allItems[i].name;
+            arr[allItems[i].barcode].unit = allItems[i].unit;
+            arr[allItems[i].barcode].price = allItems[i].price;
         }
     }   //此时arr数组显示的是实际买的商品的'名称，数量 单位，单价
         //此时arr_free数组显示的是优惠商品的'名称，数量 单位'
 
-    for( var i = 0;i < arr.length ; i++){      //总价=单价*（买的数量-优惠的数量）
-        for( var j = 0;j < arr_free.length ; j++){
-            if(arr[i].name == arr_free[j].name){
-                arr[i].total = arr[i].price * (arr[i].number - arr_free[j].number);
-                break ;
-            }
-            else {
-                  arr[i].total = arr[i].price * arr[i].number ;
-            }
-        }
+    for(var item in arr) {
+        arr[item].total = arr[item].price * (arr[item].number - arr[item].free_number);
+        //console.log( arr[item]);
     }
 
     var dateDigitToString = function (num) {
@@ -92,19 +63,21 @@ printInventory = function(inputs){
         '***<没钱赚商店>购物清单***\n' +
         '打印时间：' + formattedDateString + '\n' +
         '----------------------\n' ;
-        for(var i = 0;i < arr.length; i++){
-            printText += '名称：' + arr[i].name
-                +'，数量：' + arr[i].number+ arr[i].unit
-                +'，单价：' + arr[i].price.toFixed(2)
-                +'(元)，小计：' + arr[i].total.toFixed(2)+'(元)\n' ;
-            totalprice = totalprice + arr[i].total;
+        for(var item in arr){
+            //console.log(item);
+            printText += '名称：' + arr[item].name
+                +'，数量：' + arr[item].number+ arr[item].unit
+                +'，单价：' + arr[item].price.toFixed(2)
+                +'(元)，小计：' + arr[item].total.toFixed(2)+'(元)\n' ;
+            totalprice += arr[item].total;
         }
         printText +=   '----------------------\n' +
          '挥泪赠送商品：\n' ;
-        for(var i = 0;i < arr_free.length; i++){
+        for(var i in arr_free){
+            //console.log(arr_free[i]);
             printText += '名称：' + arr_free[i].name
-                +'，数量：' + arr_free[i].number+ arr_free[i].unit+ '\n' ;
-             saveprice = saveprice + arr_free[i].total;
+                +'，数量：' + arr_free[i].free_number+ arr_free[i].unit+ '\n' ;
+             saveprice = saveprice + arr_free[i].free_number * arr_free[i].price;
 
         }
         printText +=
@@ -115,5 +88,4 @@ printInventory = function(inputs){
         console.log(printText);
 
 };
-
 
