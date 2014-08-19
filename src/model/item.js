@@ -13,5 +13,6 @@ function My_Item(name, number, unit, price) {
     this.total = (this.price) * (this.number) ;
     this.promotion = false;
     this.free_number = 0;
+    this.free_price = (this.price) * (this.free_number) ;
 }
 
