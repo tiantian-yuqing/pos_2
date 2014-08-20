@@ -21,7 +21,7 @@ describe('pos', function () {
 
     it('should print correct text', function () {
 
- //       spyOn(console, 'log');
+        spyOn(console, 'log');
 
         printInventory(inputs);
 

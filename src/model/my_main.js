@@ -2,37 +2,37 @@
 
 printInventory = function(inputs) {
     var arr = {};
-    for (var i = 0; i < inputs.length; i++) {
-        var barcode = inputs[i].slice(0, 10);
+    _(inputs).each(function(input_barcode){
+        var barcode = input_barcode.slice(0, 10);
         arr[barcode] = arr[barcode] || new My_Item(null, 0, null, null);
         arr[barcode].name = barcode;
-        arr[barcode].number += parseInt(inputs[i].slice(11)) || 1;
-    }
+        arr[barcode].number += parseInt(input_barcode.slice(11)) || 1;
+    });
 
     var allItems = loadAllItems();
-    for (var value in allItems) {
-       if (arr[allItems[value].barcode] ){
-           arr[allItems[value].barcode].name  = allItems[value].name;
-           arr[allItems[value].barcode].price = allItems[value].price;
-           arr[allItems[value].barcode].unit  = allItems[value].unit;
-       }
-    }
+    _(allItems).each(function(item){
+        if (arr[item.barcode] ){
+            arr[item.barcode].name  = item.name;
+            arr[item.barcode].price = item.price;
+            arr[item.barcode].unit  = item.unit;
+        }
+    });
 
     var promotion = loadPromotions()[0].barcodes;
-    for(var value in promotion){
-        if( arr[promotion[value]] ){
-           arr[promotion[value]].promotion = true ;
+    _(promotion).each(function(barcode){
+        if( arr[barcode] ){
+            arr[barcode].promotion = true ;
         }
-    }
+    });
 
-    for(var value in arr){
-        if(arr[value].promotion){
-            arr[value].free_number = parseInt(arr[value].number/3);
+    _(arr).each(function(ellement){
+        if(ellement.promotion){
+            ellement.free_number = parseInt(ellement.number/3);
         }
-        arr[value].total = arr[value].price * (arr[value].number - arr[value].free_number);
-        arr[value].free_price = arr[value].price * arr[value].free_number ;
-        console.log( arr[value].free_price)
-    }
+        ellement.total = ellement.price * (ellement.number - ellement.free_number);
+        ellement.free_price = ellement.price * ellement.free_number ;
+    });
+
 
     var dateDigitToString = function (num) {
         return num < 10 ? '0' + num : num;
